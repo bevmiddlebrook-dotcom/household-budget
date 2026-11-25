@@ -1,48 +1,170 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bev & Ryan | Household Budget</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#f5f3ed;color:#35443b;font-family:Arial,sans-serif;padding:20px}
-main{max-width:520px;margin:35px auto;background:white;padding:25px;border-radius:18px;box-shadow:0 4px 20px #00000010}
-h1{color:#526b58;font-size:25px;margin-bottom:5px}
-p{color:#69766d;line-height:1.5}
-input,button{width:100%;padding:13px;margin:8px 0;border-radius:9px;font-size:16px}
-input{border:1px solid #d8ded7}
-button{background:#617d66;color:white;border:0;font-weight:bold}
-#status{font-size:14px;margin-top:15px}
-.hidden{display:none}
-</style>
-</head>
-<body>
-<main>
-<h1>Our Household Budget 💚</h1>
-<p>Bev & Ryan</p>
-
-<section id="login">
-<h3>Welcome back</h3>
-<p>Log in using your personal email and app password.</p>
-<input id="email" type="email" placeholder="Email address">
-<input id="password" type="password" placeholder="App password">
-<button id="loginBtn">Log in</button>
-<p id="error"></p>
-</section>
-
-<section id="app" class="hidden">
-<h3 id="welcome"></h3>
-<p>Your shared household budget is connected.</p>
-<p id="sync">Connecting to your budget...</p>
-<button id="logoutBtn">Log out</button>
-</section>
-</main>
-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{--green:#718875;--dark:#405747;--pale:#e9eee7;--cream:#f7f4ed;--ink:#343c35;--muted:#788078;--white:#fff;--red:#b75d54}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:Arial,sans-serif}
+header{background:var(--dark);color:white;padding:22px 16px;text-align:center}
+header h1{font-size:23px;margin:0 0 5px}
+header p{margin:0;font-size:13px;color:#e1e9df}
+main{max-width:900px;margin:auto;padding:15px}
+.panel{background:white;border-radius:14px;padding:16px;margin:13px 0;box-shadow:0 2px 9px #0000000b}
+h2{font-size:18px;color:var(--dark);margin:0 0 14px}
+h3{font-size:15px;color:var(--dark);margin:14px 0 8px}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 5px}
+input,select,button{font:inherit}
+input,select{width:100%;padding:11px;border:1px solid #d8ded6;border-radius:8px;background:white;color:var(--ink);min-width:0}
+button{border:0;border-radius:8px;padding:11px 14px;background:var(--green);color:white;font-weight:bold;cursor:pointer}
+button.secondary{background:var(--pale);color:var(--dark)}
+button.danger{background:#f5e8e6;color:var(--red)}
+button.small{padding:7px 10px;font-size:12px}
+.row{display:flex;gap:9px;align-items:end;flex-wrap:wrap}
+.row>*{flex:1}
+.row .fit{flex:0 0 auto}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{background:var(--pale);padding:13px;border-radius:10px}
+.stat span{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.stat strong{font-size:19px;color:var(--dark)}
+.smalltext{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:7px;overflow-x:auto;padding:4px 0 10px}
+.tabs button{white-space:nowrap;background:#e5e9e2;color:var(--dark)}
+.tabs button.active{background:var(--dark);color:white}
+.section{display:none}.section.active{display:block}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #edf0eb}
+.item:last-child{border-bottom:0}
+.item div:first-child{min-width:0}
+.item strong{font-size:14px}
+.item .smalltext{margin-top:4px}
+.amount{font-weight:bold;white-space:nowrap}
+.week{border:1px solid #e3e8e0;border-radius:10px;padding:12px;margin:9px 0}
+.weekhead{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.bar{height:8px;background:#edf0eb;border-radius:9px;overflow:hidden;margin-top:9px}
+.bar div{height:100%;background:var(--green)}
+.negative{color:var(--red)!important}
+#app{display:none}
+#login{max-width:420px;margin:45px auto;padding:18px}
+#login .panel{padding:22px}
+#status{font-size:12px;color:#dce8dc;margin-top:8px}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:20px}
+@media(max-width:500px){.grid{grid-template-columns:1fr 1fr}.stat strong{font-size:16px}.panel{padding:13px}header h1{font-size:21px}}
+</style>
+</head>
+<body>
+<header>
+<h1>Bev & Ryan's Home</h1>
+<p>Our household budget · Together, one month at a time</p>
+<div id="status">Please log in</div>
+</header>
+
+<div id="login">
+<div class="panel">
+<h2>Welcome home 💚</h2>
+<label>Email address</label>
+<input id="email" type="email" autocomplete="username" placeholder="Your email">
+<label>Password</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="Your password">
+<button style="width:100%;margin-top:15px" onclick="login()">Log in</button>
+<p id="loginError" class="smalltext negative"></p>
+</div>
+</div>
+
+<div id="app">
+<main>
+<div class="panel">
+<div class="row">
+<div>
+<label>Budget month</label>
+<select id="monthSelect" onchange="changeMonth()"></select>
+</div>
+<button class="fit" onclick="newMonth()">+ New month</button>
+</div>
+<p class="smalltext">Your budget cycle runs from the 25th to the 24th.</p>
+</div>
+
+<div class="tabs">
+<button class="active" onclick="showTab('planner',this)">Monthly Planner</button>
+<button onclick="showTab('weekly',this)">Weekly Tracker</button>
+<button onclick="showTab('fixed',this)">Fixed Expenses</button>
+<button onclick="showTab('spending',this)">Spending Log</button>
+</div>
+
+<section id="planner" class="section active">
+<div class="panel">
+<h2>Monthly Planner</h2>
+<div class="grid">
+<div><label>Monthly household income (R)</label><input id="income" type="number" min="0" step=".01" onchange="saveField('income',this.value)"></div>
+<div><label>Monthly grocery budget (R)</label><input id="groceryBudget" type="number" min="0" step=".01" onchange="saveField('groceryBudget',this.value)"></div>
+<div><label>Other variable budget (R)</label><input id="variableBudget" type="number" min="0" step=".01" onchange="saveField('variableBudget',this.value)"></div>
+</div>
+<div class="grid" style="margin-top:14px">
+<div class="stat"><span>Fixed expenses</span><strong id="totalFixed">R0.00</strong></div>
+<div class="stat"><span>Available after fixed expenses</span><strong id="afterFixed">R0.00</strong></div>
+<div class="stat"><span>Grocery spending</span><strong id="grocerySpent">R0.00</strong></div>
+<div class="stat"><span>Other spending</span><strong id="otherSpent">R0.00</strong></div>
+</div>
+<p class="smalltext" style="margin-top:13px">Your figures update as you add expenses and spending.</p>
+</div>
+</section>
+
+<section id="weekly" class="section">
+<div class="panel">
+<h2>Weekly Grocery Tracker</h2>
+<div class="grid">
+<div class="stat"><span>Monthly grocery budget</span><strong id="weeklyBudget">R0.00</strong></div>
+<div class="stat"><span>Grocery money remaining</span><strong id="groceryRemaining">R0.00</strong></div>
+</div>
+<p class="smalltext" style="margin-top:12px">Weekly allowances adjust according to the days in each remaining week. Spending is taken from the grocery entries in your Spending Log.</p>
+<div id="weeks"></div>
+</div>
+</section>
+
+<section id="fixed" class="section">
+<div class="panel">
+<h2>Fixed Expenses</h2>
+<div class="row">
+<div><label>Expense name</label><input id="fixedName" placeholder="e.g. Rent"></div>
+<div><label>Monthly amount (R)</label><input id="fixedAmount" type="number" min="0" step=".01" placeholder="0.00"></div>
+<button class="fit" onclick="addFixed()">Add</button>
+</div>
+<div id="fixedList" style="margin-top:12px"></div>
+</div>
+</section>
+
+<section id="spending" class="section">
+<div class="panel">
+<h2>Spending Log</h2>
+<div class="row">
+<div><label>Date</label><input id="spendDate" type="date"></div>
+<div><label>Amount (R)</label><input id="spendAmount" type="number" min="0" step=".01" placeholder="0.00"></div>
+</div>
+<label>Description</label>
+<input id="spendDescription" placeholder="What did you spend on?">
+<label>Category</label>
+<select id="spendCategory">
+<option>Groceries</option>
+<option>Transport</option>
+<option>Personal</option>
+<option>Entertainment</option>
+<option>Eating out</option>
+<option>Household</option>
+<option>Other</option>
+</select>
+<button style="width:100%;margin-top:13px" onclick="addSpend()">Add spending</button>
+<h3>Entries for this budget month</h3>
+<div id="spendingList"></div>
+</div>
+</section>
+<button class="secondary" style="width:100%" onclick="logout()">Log out</button>
+</main>
+</div>
+<footer>Bev & Ryan · Our home, our plans, our future 💚</footer>
 
 <script>
 const firebaseConfig = {
@@ -55,60 +177,192 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+const ref=db.collection("household").doc("sharedBudget");
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+let allData={months:{}};
+let currentMonth="";
+let unsubscribe=null;
+let ready=false;
 
-const loginSection = document.getElementById("login");
-const appSection = document.getElementById("app");
-const errorText = document.getElementById("error");
-
-document.getElementById("loginBtn").onclick = async () => {
-  errorText.textContent = "";
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-  } catch (error) {
-    errorText.textContent = "Login unsuccessful. Please check your email and password.";
-  }
-};
-
-auth.onAuthStateChanged(async user => {
-  if (!user) {
-    loginSection.classList.remove("hidden");
-    appSection.classList.add("hidden");
-    return;
-  }
-
-  loginSection.classList.add("hidden");
-  appSection.classList.remove("hidden");
-  document.getElementById("welcome").textContent =
-    "Welcome, " + (user.email || "household member");
-
-  const sync = document.getElementById("sync");
-
-  try {
-    const ref = db.collection("household").doc("sharedBudget");
-    await ref.set({
-      lastOpenedBy: user.email,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    ref.onSnapshot(doc => {
-      sync.textContent = doc.exists
-        ? "✓ Your shared budget is syncing successfully."
-        : "Waiting for budget data...";
-    }, () => {
-      sync.textContent = "Unable to sync. Please check your connection.";
-    });
-  } catch (error) {
-    sync.textContent = "Database connection unsuccessful. Please try again.";
-  }
+function money(n){return "R"+(Number(n)||0).toLocaleString("en-ZA",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function dateKey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function cycleStart(d){
+ let x=new Date(d.getFullYear(),d.getMonth(),1);
+ if(d.getDate()<25)x.setMonth(x.getMonth()-1);
+ return new Date(x.getFullYear(),x.getMonth(),25);
+}
+function cycleId(d){return dateKey(cycleStart(d)).slice(0,7)}
+function monthData(){
+ if(!allData.months)allData.months={};
+ if(!allData.months[currentMonth])allData.months[currentMonth]={income:0,groceryBudget:0,variableBudget:0,fixed:[],spending:[]};
+ let m=allData.months[currentMonth];
+ if(!Array.isArray(m.fixed))m.fixed=[];
+ if(!Array.isArray(m.spending))m.spending=[];
+ return m;
+}
+function saveData(){
+ if(!ready)return;
+ ref.set({months:allData.months,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
+ .catch(e=>alert("Could not save your changes: "+e.message));
+}
+function saveField(field,value){
+ monthData()[field]=Number(value)||0;
+ saveData();render();
+}
+function login(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ document.getElementById("loginError").textContent="";
+ auth.signInWithEmailAndPassword(email,password).catch(e=>{
+ document.getElementById("loginError").textContent=e.message;
+ });
+}
+function logout(){auth.signOut()}
+auth.onAuthStateChanged(async user=>{
+ if(user){
+ document.getElementById("login").style.display="none";
+ document.getElementById("app").style.display="block";
+ document.getElementById("status").textContent="Connected as "+user.email;
+ currentMonth=cycleId(new Date());
+ if(unsubscribe)unsubscribe();
+ unsubscribe=ref.onSnapshot(snap=>{
+ allData=snap.exists?snap.data():{months:{}};
+ if(!allData.months)allData.months={};
+ ready=true;
+ if(!allData.months[currentMonth])allData.months[currentMonth]={income:0,groceryBudget:0,variableBudget:0,fixed:[],spending:[]};
+ render();
+ },e=>{document.getElementById("status").textContent="Sync issue: "+e.message});
+ }else{
+ ready=false;
+ if(unsubscribe){unsubscribe();unsubscribe=null}
+ document.getElementById("login").style.display="block";
+ document.getElementById("app").style.display="none";
+ document.getElementById("status").textContent="Please log in";
+ }
 });
 
-document.getElementById("logoutBtn").onclick = () => auth.signOut();
+function changeMonth(){
+ currentMonth=document.getElementById("monthSelect").value;
+ if(!allData.months[currentMonth])allData.months[currentMonth]={income:0,groceryBudget:0,variableBudget:0,fixed:[],spending:[]};
+ render();
+}
+function newMonth(){
+ let p=currentMonth.split("-").map(Number);
+ let d=new Date(p[0],p[1]-1+1,1);
+ currentMonth=dateKey(d).slice(0,7);
+ if(!allData.months[currentMonth])allData.months[currentMonth]={income:0,groceryBudget:0,variableBudget:0,fixed:[],spending:[]};
+ saveData();render();
+}
+function showTab(id,button){
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ button.classList.add("active");
+}
+function fixedTotal(m){return m.fixed.reduce((a,x)=>a+(Number(x.amount)||0),0)}
+function groceryTotal(m){return m.spending.filter(x=>x.category==="Groceries").reduce((a,x)=>a+(Number(x.amount)||0),0)}
+function otherTotal(m){return m.spending.filter(x=>x.category!=="Groceries").reduce((a,x)=>a+(Number(x.amount)||0),0)}
+function addFixed(){
+ let name=document.getElementById("fixedName").value.trim();
+ let amount=Number(document.getElementById("fixedAmount").value);
+ if(!name||amount<=0){alert("Please enter an expense name and amount.");return}
+ monthData().fixed.push({id:Date.now(),name,amount});
+ document.getElementById("fixedName").value="";
+ document.getElementById("fixedAmount").value="";
+ saveData();render();
+}
+function removeFixed(id){
+ monthData().fixed=monthData().fixed.filter(x=>String(x.id)!==String(id));
+ saveData();render();
+}
+function addSpend(){
+ let date=document.getElementById("spendDate").value;
+ let amount=Number(document.getElementById("spendAmount").value);
+ let description=document.getElementById("spendDescription").value.trim();
+ let category=document.getElementById("spendCategory").value;
+ if(!date||amount<=0||!description){alert("Please enter a date, amount and description.");return}
+ if(cycleId(new Date(date+"T12:00:00"))!==currentMonth){alert("That date is outside this budget month. Please select a date between the 25th and 24th.");return}
+ monthData().spending.push({id:Date.now(),date,amount,description,category});
+ document.getElementById("spendAmount").value="";
+ document.getElementById("spendDescription").value="";
+ saveData();render();
+}
+function removeSpend(id){
+ monthData().spending=monthData().spending.filter(x=>String(x.id)!==String(id));
+ saveData();render();
+}
+function makeWeeks(){
+ let p=currentMonth.split("-").map(Number);
+ let start=new Date(p[0],p[1]-1,25);
+ let end=new Date(p[0],p[1],24);
+ let weeks=[],cursor=new Date(start);
+ while(cursor<=end){
+  let weekEnd=new Date(cursor);
+  if(weeks.length===0){
+   while(weekEnd.getDay()!==6&&weekEnd<end)weekEnd.setDate(weekEnd.getDate()+1);
+  }else{
+   weekEnd.setDate(weekEnd.getDate()+6);
+  }
+  if(weekEnd>end)weekEnd=new Date(end);
+  weeks.push({start:new Date(cursor),end:new Date(weekEnd),days:Math.round((weekEnd-cursor)/86400000)+1});
+  cursor=new Date(weekEnd);cursor.setDate(cursor.getDate()+1);
+ }
+ return weeks;
+}
+function renderWeeks(m){
+ let weeks=makeWeeks();
+ let budget=Number(m.groceryBudget)||0;
+ let today=new Date();today.setHours(0,0,0,0);
+ let start=new Date(Number(currentMonth.slice(0,4)),Number(currentMonth.slice(5,7))-1,25);
+ let end=new Date(Number(currentMonth.slice(0,4)),Number(currentMonth.slice(5,7)),24);
+ let currentCycle=today>=start&&today<=end;
+ let totalDays=weeks.reduce((a,w)=>a+w.days,0);
+ let baseline=totalDays?budget/totalDays:0;
+ let pastAllowance=0,currentSpent=0,remainingDays=0;
+ let weekSpent=weeks.map(w=>m.spending.filter(x=>x.category==="Groceries"&&new Date(x.date+"T12:00:00")>=w.start&&new Date(x.date+"T12:00:00")<=w.end).reduce((a,x)=>a+Number(x.amount||0),0));
+ let currentIndex=weeks.findIndex(w=>today>=w.start&&today<=w.end);
+ if(currentCycle&&currentIndex>=0){
+  for(let i=0;i<currentIndex;i++)pastAllowance+=weeks[i].days*baseline;
+  currentSpent=weekSpent.slice(0,currentIndex+1).reduce((a,b)=>a+b,0);
+  remainingDays=Math.max(0,Math.round((end-today)/86400000)+1);
+ }
+ let remainingPool=currentCycle?budget-pastAllowance-currentSpent:0;
+ let html="";
+ weeks.forEach((w,i)=>{
+  let allowance;
+  if(!currentCycle||currentIndex<0){allowance=w.days*baseline}
+  else if(i<currentIndex){allowance=w.days*baseline}
+  else if(i===currentIndex){let daysLeft=Math.max(0,Math.round((w.end-today)/86400000)+1);allowance=weekSpent[i]+(remainingDays?remainingPool*daysLeft/remainingDays:0)}
+  else{allowance=remainingDays?remainingPool*w.days/remainingDays:0}
+  let spent=weekSpent[i],left=allowance-spent;
+  let pct=allowance>0?Math.min(100,Math.max(0,spent/allowance*100)):0;
+  html+=`<div class="week"><div class="weekhead"><strong>Week ${i+1}</strong><span class="smalltext">${dateKey(w.start)} – ${dateKey(w.end)} · ${w.days} days</span></div><div class="grid" style="margin-top:10px"><div><span class="smalltext">Allowance</span><br><strong>${money(allowance)}</strong></div><div><span class="smalltext">Spent</span><br><strong>${money(spent)}</strong></div></div><div class="row" style="margin-top:8px"><span class="smalltext">Remaining: <strong class="${left<0?'negative':''}">${money(left)}</strong></span><span class="smalltext" style="text-align:right">${left<0?'Over allowance':'Available'}</span></div><div class="bar"><div style="width:${pct}%"></div></div></div>`;
+ });
+ document.getElementById("weeks").innerHTML=html;
+ document.getElementById("weeklyBudget").textContent=money(budget);
+ document.getElementById("groceryRemaining").textContent=money(budget-groceryTotal(m));
+}
+function render(){
+ let m=monthData();
+ let opts=Object.keys(allData.months).sort().reverse();
+ if(!opts.includes(currentMonth))opts.unshift(currentMonth);
+ document.getElementById("monthSelect").innerHTML=opts.map(x=>`<option value="${x}" ${x===currentMonth?"selected":""}>${new Date(Number(x.slice(0,4)),Number(x.slice(5,7))-1,1).toLocaleDateString("en-ZA",{month:"long",year:"numeric"})}</option>`).join("");
+ document.getElementById("income").value=m.income||"";
+ document.getElementById("groceryBudget").value=m.groceryBudget||"";
+ document.getElementById("variableBudget").value=m.variableBudget||"";
+ document.getElementById("totalFixed").textContent=money(fixedTotal(m));
+ document.getElementById("afterFixed").textContent=money((Number(m.income)||0)-fixedTotal(m));
+ document.getElementById("grocerySpent").textContent=money(groceryTotal(m));
+ document.getElementById("otherSpent").textContent=money(otherTotal(m));
+ document.getElementById("fixedList").innerHTML=m.fixed.length?m.fixed.map(x=>`<div class="item"><div><strong>${esc(x.name)}</strong></div><span class="amount">${money(x.amount)}</span><button class="danger small" onclick="removeFixed('${x.id}')">Remove</button></div>`).join(""):'<p class="smalltext">No fixed expenses added yet.</p>';
+ let entries=[...m.spending].sort((a,b)=>b.date.localeCompare(a.date));
+ document.getElementById("spendingList").innerHTML=entries.length?entries.map(x=>`<div class="item"><div><strong>${esc(x.description)}</strong><div class="smalltext">${esc(x.date)} · ${esc(x.category)}</div></div><span class="amount">${money(x.amount)}</span><button class="danger small" onclick="removeSpend('${x.id}')">Remove</button></div>`).join(""):'<p class="smalltext">No spending entries yet.</p>';
+ renderWeeks(m);
+}
+document.getElementById("spendDate").value=dateKey(new Date());
 </script>
 </body>
 </html>
