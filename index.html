@@ -123,14 +123,5 @@ document.addEventListener("click",e=>{let t=e.target.closest("button");if(!t)ret
 $("loginBtn").onclick=async()=>{ $("loginError").textContent="";try{await auth.signInWithEmailAndPassword($("email").value.trim(),$("password").value)}catch(e){$("loginError").textContent=e.message}};
 $("logoutBtn").onclick=()=>auth.signOut();
 auth.onAuthStateChanged(async user=>{if(!user){$("login").classList.remove("hidden");$("app").classList.add("hidden");if(unsub){unsub();unsub=null}return}if(!allowed.includes((user.email||"").toLowerCase())){await auth.signOut();$("loginError").textContent="This email is not authorised for this household.";return}$("login").classList.add("hidden");$("app").classList.remove("hidden");setStatus("Loading shared budget…");if(unsub)unsub();unsub=ref.onSnapshot(snap=>{data=snap.exists?snap.data():{months:{}};if(!data.months)data.months={};if(!data.months[keyOf(currentStart())])data.months[keyOf(currentStart())]=fresh();setupCycles();setStatus("Connected and synced with Ryan ✓")},err=>setStatus("Sync error: "+err.message))});
-@media(max-width:520px){
-.row3.row{
-display:grid !important;
-grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-gap:5px !important;
-}
-.row3.row>div{min-width:0}
-.row3.row label{font-size:10px}
-.row3.row input{font-size:12px;padding:7px 3px;min-width:0}
-}
+
 </script></body></html>
